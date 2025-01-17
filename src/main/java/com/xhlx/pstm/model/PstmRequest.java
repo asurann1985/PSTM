@@ -15,6 +15,8 @@ public class PstmRequest {
     private String url;
 
     private PstmMethod method;
+    
+    private BodyType bodyType;
 
     private List<PstmHeaderItem> headers = new ArrayList<>();
 
@@ -82,6 +84,14 @@ public class PstmRequest {
 
     public void setParams(List<PstmQueryParamItem> params) {
         this.params = params;
+    }
+
+    public BodyType getBodyType() {
+        return bodyType;
+    }
+
+    public void setBodyType(BodyType bodyType) {
+        this.bodyType = bodyType;
     }
 
 }
