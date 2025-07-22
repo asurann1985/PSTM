@@ -8,8 +8,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 
-import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -28,14 +28,14 @@ public class PstmBodyFileSetEditerPanel extends JPanel {
     private PstmBodyFileItem body;
     private JTextField tx_name;
     private JTextField tx_path;
-    private PstmButton bt_select;
+    private JButton bt_select;
 
     public PstmBodyFileSetEditerPanel(PstmBodyFileItem body, PstmRequestSetItemPanel setPanel) {
         this.body = body;
         setLayout(new BorderLayout(0, 0));
 
         JLabel lblNewLabel = new JLabel("BODY(File)");
-        lblNewLabel.setBackground(Style.titleColor);
+        lblNewLabel.setBackground(Style.setItemBackgroundBody);
         lblNewLabel.setOpaque(true);
         add(lblNewLabel, BorderLayout.NORTH);
 
@@ -43,11 +43,13 @@ public class PstmBodyFileSetEditerPanel extends JPanel {
         add(panel, BorderLayout.CENTER);
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-        JLabel lblNewLabel_1 = new JLabel(" Key:  ");
-        panel.add(lblNewLabel_1);
+        JLabel lb_key = new JLabel(" Key:  ");
+        lb_key.setPreferredSize(new Dimension(55, 0));
+        panel.add(lb_key);
 
         tx_name = new JTextField();
         tx_name.setFont(PstmFont.getPstmFont(12f, Font.PLAIN));
+        tx_name.setPreferredSize(new Dimension(300, 0));
         tx_name.setText(body.getName());
         tx_name.getDocument().addDocumentListener(new DocumentListener() {
 
@@ -55,14 +57,14 @@ public class PstmBodyFileSetEditerPanel extends JPanel {
             public void removeUpdate(DocumentEvent e) {
                 // TODO Auto-generated method stub
                 body.setName(tx_name.getText());
-                setPanel.getLb_info().setText(body.getName());
+                setPanel.updateInfo();
             }
 
             @Override
             public void insertUpdate(DocumentEvent e) {
                 // TODO Auto-generated method stub
                 body.setName(tx_name.getText());
-                setPanel.getLb_info().setText(body.getName());
+                setPanel.updateInfo();
             }
 
             @Override
@@ -72,16 +74,20 @@ public class PstmBodyFileSetEditerPanel extends JPanel {
         });
         panel.add(tx_name);
 
-        JLabel lblNewLabel_2 = new JLabel("  File:  ");
-        panel.add(lblNewLabel_2);
+        JLabel lb_file = new JLabel("  File:  ");
+        lb_file.setPreferredSize(new Dimension(55, 0));
+        panel.add(lb_file);
 
         tx_path = new JTextField();
         tx_path.setFont(PstmFont.getPstmFont(12f, Font.PLAIN));
+        tx_path.setPreferredSize(new Dimension(300, 0));
         tx_path.setText(body.getPath());
         tx_path.setEditable(false);
         panel.add(tx_path);
 
-        bt_select = new PstmButton("Select", new Dimension(120, 26));
+        bt_select = new JButton("Select");
+        bt_select.setBackground(Style.buttonColor);
+        bt_select.setPreferredSize(new Dimension(120, 26));
         bt_select.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         bt_select.addMouseListener(new MouseAdapter() {
 
@@ -111,7 +117,7 @@ public class PstmBodyFileSetEditerPanel extends JPanel {
         return tx_name;
     }
 
-    public PstmButton getBt_select() {
+    public JButton getBt_select() {
         return bt_select;
     }
 }

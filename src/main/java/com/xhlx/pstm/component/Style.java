@@ -16,9 +16,21 @@ public class Style {
     
     public static Color closeRequestBtColor = Color.decode("#DB558D");
 
-    public static Color setItemCloseBtColor = Color.decode("#BE002F");
+    public static Color setItemCloseBtColor = Color.decode("#FF9CB5");
 
     public static Color tabDefaultColor = Color.decode("#96D7C6");
 
     public static Color tabSelectColor = Color.decode("#F2935C");
+    
+    public static Color windowBackgroundColor = Color.decode("#f6f6f6");
+    
+    public static Color tabBorderLineColor = Color.decode("#A1A1A1");
+    
+    public static Color setItemBackgroundHeader = Color.decode("#ffb8d6");
+    
+    public static Color setItemBackgroundParam = Color.decode("#b8dfff");
+    
+    public static Color setItemBackgroundAuth = Color.decode("#96D7C6");
+    
+    public static Color setItemBackgroundBody = Color.decode("#ffbb8e");
 }

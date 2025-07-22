@@ -27,7 +27,7 @@ public class PstmBodyJSONSetEditerPanel extends JPanel {
         setLayout(new BorderLayout(0, 0));
 
         JLabel lblNewLabel = new JLabel("BODY(Json)");
-        lblNewLabel.setBackground(Style.titleColor);
+        lblNewLabel.setBackground(Style.setItemBackgroundBody);
         lblNewLabel.setOpaque(true);
         add(lblNewLabel, BorderLayout.NORTH);
 
@@ -41,14 +41,14 @@ public class PstmBodyJSONSetEditerPanel extends JPanel {
             public void removeUpdate(DocumentEvent e) {
                 // TODO Auto-generated method stub
                 body.setJson(tx_json.getText());
-                setPanel.getLb_info().setText(body.getJson());
+                setPanel.updateInfo();
             }
 
             @Override
             public void insertUpdate(DocumentEvent e) {
                 // TODO Auto-generated method stub
                 body.setJson(tx_json.getText());
-                setPanel.getLb_info().setText(body.getJson());
+                setPanel.updateInfo();
             }
 
             @Override

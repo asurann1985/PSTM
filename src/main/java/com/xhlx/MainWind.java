@@ -1,21 +1,26 @@
 package com.xhlx;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.function.BiConsumer;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONWriter;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
+import com.xhlx.pstm.component.PSTM;
 import com.xhlx.pstm.component.PstmButton;
 import com.xhlx.pstm.component.PstmRequestPanel;
 import com.xhlx.pstm.component.Style;
@@ -25,18 +30,28 @@ import com.xhlx.pstm.model.PstmRequest;
 import com.xhlx.pstm.model.attr.PstmHeaderItem;
 import com.xhlx.pstm.model.attr.PstmQueryParamItem;
 
+import static com.formdev.flatlaf.FlatClientProperties.*;
+import static com.formdev.flatlaf.FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK;
+import static com.formdev.flatlaf.FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT;
+
 public class MainWind {
 
     private JFrame frame;
+    
+    public String currPath = "";
 
     /**
      * Launch the application.
      */
     public static void main(String[] args) {
-//		FlatDarkLaf.setup();
+        PSTM.setup();
+        PSTM.setUseNativeWindowDecorations(true);
+        UIManager.put( "TitlePane.menuBarEmbedded", true);
+        UIManager.put( "TitlePane.unifiedBackground", true);
+        UIManager.put( "TitlePane.showIcon", true);
         EventQueue.invokeLater(new Runnable() {
             public void run() {
-                try {
+                try { 
                     MainWind window = new MainWind();
                     window.frame.setVisible(true);
                 } catch (Exception e) {
@@ -50,6 +65,9 @@ public class MainWind {
      * Create the application.
      */
     public MainWind() {
+        
+        currPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        
         JFrame.setDefaultLookAndFeelDecorated(true);
         initialize();
     }
@@ -65,43 +83,227 @@ public class MainWind {
         frame.setMinimumSize(new Dimension(800, 500));
 //		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
         frame.setLayout(new BorderLayout());
+        
+        
+        
+        
+        
+        
+        JMenuBar menuBar = new JMenuBar();
+        
+        JMenu fileMenu = new JMenu();
+        fileMenu.setText("File");
+        fileMenu.setMnemonic('F');
+        
+        JMenuItem newMenuItem = new JMenuItem();
 
+        newMenuItem.setText("New");
+        newMenuItem.setAccelerator(
+                KeyStroke.getKeyStroke(KeyEvent.VK_N, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        newMenuItem.setMnemonic('N');
+        fileMenu.add(newMenuItem);
+
+        JMenuItem openMenuItem = new JMenuItem();
+
+        openMenuItem.setText("Open");
+        openMenuItem.setAccelerator(
+                KeyStroke.getKeyStroke(KeyEvent.VK_N, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        openMenuItem.setMnemonic('N');
+        fileMenu.add(openMenuItem);
+
+        JMenuItem importMenuItem = new JMenuItem();
+
+        importMenuItem.setText("Import");
+        importMenuItem.setAccelerator(
+                KeyStroke.getKeyStroke(KeyEvent.VK_N, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        importMenuItem.setMnemonic('N');
+        fileMenu.add(importMenuItem);
+        
+        menuBar.add(fileMenu);
+        
+        menuBar.setVisible(true);
+        
+        frame.setJMenuBar(menuBar);
+        
+        
         JTabbedPane requestsPanel = new JTabbedPane();
+        
+        JButton muitAdd = new JButton(new FlatSVGIcon("addtab.svg", 25, 25));
+        muitAdd.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        muitAdd.setFocusable(false);
+        muitAdd.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                PstmRequest req = new PstmRequest();
+
+                PstmRequestPanel request = new PstmRequestPanel(req, requestsPanel);
+                
+                requestsPanel.add(request, "New Request");
+
+                requestsPanel.setSelectedIndex(requestsPanel.getTabCount() - 1);
+            }
+        });
+        
+        JButton muitSave = new JButton(new FlatSVGIcon("downloadtab.svg", 25, 25));
+//        muitSave.setText("Save");
+//        muitSave.setPreferredSize(new Dimension(80, 30));
+        muitSave.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        muitSave.setFocusable(false);
+//        muitSave.setBackground(Style.saveBtColor);
+        muitSave.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (requestsPanel.getSelectedComponent() != null && requestsPanel.getSelectedComponent() instanceof PstmRequestPanel) {
+                    
+                    // 如果是从文件加载的，就保存到加载的文件里，如果是新建的，就保存到新的文件里。
+                    if (((PstmRequestPanel)requestsPanel.getSelectedComponent()).getSaveFile() == null) {
+                    
+                        int fileIdx = 1;
+                        
+                        for (;;fileIdx++) {
+                            File f = new File(currPath + "/Request-" + fileIdx + ".json");
+                            
+                            if (!f.exists()) {
+                                break;
+                            }
+                        }
+                        
+                        JFileChooser chooser = new JFileChooser(currPath);
+                        
+                        chooser.setMultiSelectionEnabled(false);
+                        chooser.setDialogTitle("Save Request");
+                        chooser.setSelectedFile(new File("Request-" + fileIdx + ".json"));
+                        
+                        FileNameExtensionFilter filter = new FileNameExtensionFilter("Json File", "json");
+                        chooser.setFileFilter(filter);
+                        
+                        int rst = chooser.showSaveDialog(frame);
+                        
+                        if (rst == JFileChooser.APPROVE_OPTION) {
+                            
+                            File fileToSave = chooser.getSelectedFile();
+                            
+                            if (!fileToSave.getName().toLowerCase().endsWith(".json")) {
+                                fileToSave = new File(fileToSave.getAbsolutePath() + ".json");
+                            }
+                            
+                            PrintWriter pw = null;
+                            
+                            try {
+                                String str = JSON.toJSONString(((PstmRequestPanel)requestsPanel.getSelectedComponent()).getRequest(), JSONWriter.Feature.PrettyFormat);
+                                System.out.println(str);
+                                
+                                pw = new PrintWriter(fileToSave);
+                                pw.write(str);
+                                pw.flush();
+                            } catch (FileNotFoundException e1) {
+                                // TODO Auto-generated catch block
+                                e1.printStackTrace();
+                            }finally {
+                                if (pw != null) {
+                                    pw.close();
+                                }
+                            }
+                            
+                            
+                        }
+                    } else {
+                        
+                        File fileToSave = ((PstmRequestPanel)requestsPanel.getSelectedComponent()).getSaveFile();
+                        
+                        if (fileToSave.exists()) {
+                            fileToSave.delete();
+                        }
+                        
+                        PrintWriter pw = null;
+                        
+                        try {
+                            String str = JSON.toJSONString(((PstmRequestPanel)requestsPanel.getSelectedComponent()).getRequest(), JSONWriter.Feature.PrettyFormat);
+                            System.out.println(str);
+                            
+                            pw = new PrintWriter(fileToSave);
+                            pw.write(str);
+                            pw.flush();
+                        } catch (FileNotFoundException e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }finally {
+                            if (pw != null) {
+                                pw.close();
+                            }
+                        }
+                    }
+                }
+            }
+            
+        });
+        
+        JToolBar trailing = new JToolBar();
+        trailing.setFloatable( false );
+        trailing.setBorder( null );
+        trailing.add( Box.createHorizontalGlue() );
+        trailing.add( muitAdd );
+        trailing.add(muitSave);
+
+        
         requestsPanel.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-        requestsPanel.setUI(new PstmTabStyle());
+//        requestsPanel.setUI(new PstmTabStyle());
+        requestsPanel.putClientProperty(TABBED_PANE_TAB_TYPE, TABBED_PANE_TAB_TYPE_CARD);
+        requestsPanel.putClientProperty( TABBED_PANE_TAB_CLOSABLE, true );
+        requestsPanel.putClientProperty( TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, "Close" );
+        requestsPanel.putClientProperty( TABBED_PANE_MINIMUM_TAB_WIDTH, 170 );
+        requestsPanel.putClientProperty( TABBED_PANE_MAXIMUM_TAB_WIDTH, 170 );
+        requestsPanel.putClientProperty( TABBED_PANE_TAB_ALIGNMENT, SwingConstants.LEADING );
+        requestsPanel.putClientProperty( TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING );
+        requestsPanel.putClientProperty( TABBED_PANE_TRAILING_COMPONENT, trailing );
+        requestsPanel.putClientProperty( TABBED_PANE_TAB_CLOSE_CALLBACK,
+                (BiConsumer<JTabbedPane, Integer>) (tabPane, tabIndex) -> {
+//                    AWTEvent e = EventQueue.getCurrentEvent();
+//                    int modifiers = (e instanceof MouseEvent) ? ((MouseEvent)e).getModifiers() : 0;
+//                    JOptionPane.showMessageDialog( null, "Closed tab '" + tabPane.getTitleAt( tabIndex ) + "'."
+//                                    + "\n\n(modifiers: " + MouseEvent.getMouseModifiersText( modifiers ) + ")",
+//                            "Tab Closed", JOptionPane.PLAIN_MESSAGE );
+                    requestsPanel.remove(tabIndex);
+                } );
 
-        PstmRequest req = new PstmRequest();
-        req.getHeaders().add(new PstmHeaderItem("a", "b"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
-        req.getHeaders().add(new PstmHeaderItem("c", "d"));
 
-        req.getParams().add(new PstmQueryParamItem("e", "f"));
-
-        req.setMethod(PstmMethod.GET);
-        req.setUrl("www.baidu.com");
-
-        PstmRequestPanel request = new PstmRequestPanel(req);
-
-        PstmRequest req2 = new PstmRequest();
-        PstmRequestPanel request2 = new PstmRequestPanel(req2);
-
-        PstmRequest req21 = new PstmRequest();
-        PstmRequestPanel request21 = new PstmRequestPanel(req21);
-
-//        request.putClientProperty("JTabbedPane.tabCloseable", "");
-        requestsPanel.add(request, "ssssss");
-        requestsPanel.add(request2, "ffffff");
-        requestsPanel.add(request21, "ffffff");
+//        PstmRequest req = new PstmRequest();
+//        req.getHeaders().add(new PstmHeaderItem("a", "b"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//        req.getHeaders().add(new PstmHeaderItem("c", "d"));
+//
+//        req.getParams().add(new PstmQueryParamItem("e", "f"));
+//
+//        req.setMethod(PstmMethod.GET);
+//        req.setUrl("www.baidu.com");
+//
+//        PstmRequestPanel request = new PstmRequestPanel(req, requestsPanel);
+//
+//        PstmRequest req2 = new PstmRequest();
+//        PstmRequestPanel request2 = new PstmRequestPanel(req2, requestsPanel);
+//
+//        PstmRequest req21 = new PstmRequest();
+//        PstmRequestPanel request21 = new PstmRequestPanel(req21, requestsPanel);
+//
+////        request.putClientProperty("JTabbedPane.tabCloseable", "");
+//        requestsPanel.addTab("ssssss", request);
+//        requestsPanel.addTab("ffffff", request2);
+//        requestsPanel.addTab("ffffff", request21);
+//        requestsPanel.add(request, "ssssss");
+//        requestsPanel.add(request2, "ffffff");
+//        requestsPanel.add(request21, "ffffff");
 
         frame.getContentPane().add(requestsPanel, BorderLayout.CENTER);
         
@@ -112,80 +314,179 @@ public class MainWind {
         toolsbarlayout.columnWeights = new double[] {0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0};
         GridBagConstraints toolsbarc = null;
         
-        JPanel toolsbar = new JPanel(toolsbarlayout);
-        toolsbar.setPreferredSize(new Dimension(0, 30));
-        frame.getContentPane().add(toolsbar, BorderLayout.NORTH);
-        
-        PstmButton muitOpen = new PstmButton("Open", new Dimension(80, 30));
-        muitOpen.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        toolsbarc = new GridBagConstraints();
-        toolsbarc.gridx = 0;
-        toolsbarc.gridy = 0;
-        toolsbar.add(muitOpen, toolsbarc);
-        
-        PstmButton muitImport = new PstmButton("Import", new Dimension(80, 30));
-        muitImport.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        toolsbarc = new GridBagConstraints();
-        toolsbarc.gridx = 1;
-        toolsbarc.gridy = 0;
-        toolsbar.add(muitImport, toolsbarc);
+//        JPanel toolsbar = new JPanel(toolsbarlayout);
+//        toolsbar.setPreferredSize(new Dimension(0, 30));
+//        frame.getContentPane().add(toolsbar, BorderLayout.NORTH);
+//        
+////        PstmButton muitOpen = new PstmButton("Open", new Dimension(80, 30));
+//        JButton muitOpen = new JButton();
+//        muitOpen.setText("Open");
+//        muitOpen.setPreferredSize(new Dimension(80, 30));
+//        muitOpen.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+//        muitOpen.setFocusable(false);
+//        toolsbarc = new GridBagConstraints();
+//        toolsbarc.gridx = 0;
+//        toolsbarc.gridy = 0;
+//        toolsbar.add(muitOpen, toolsbarc);
+//        
+////        PstmButton muitImport = new PstmButton("Import", new Dimension(80, 30));
+//        JButton muitImport = new JButton();
+//        muitImport.setText("Import");
+//        muitImport.setPreferredSize(new Dimension(80, 30));
+//        muitImport.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+//        muitImport.setFocusable(false);
+//        toolsbarc = new GridBagConstraints();
+//        toolsbarc.gridx = 1;
+//        toolsbarc.gridy = 0;
+//        toolsbar.add(muitImport, toolsbarc);
 
         // 新建tab按钮
-        PstmButton muitAdd = new PstmButton("New", new Dimension(80, 30));
-        muitAdd.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        muitAdd.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                PstmRequest req = new PstmRequest();
-
-                PstmRequestPanel request = new PstmRequestPanel(req);
-                
-                requestsPanel.add(request, "New Request");
-
-                requestsPanel.setSelectedIndex(requestsPanel.getTabCount() - 1);
-            }
-
-        });
-        toolsbarc = new GridBagConstraints();
-        toolsbarc.gridx = 7;
-        toolsbarc.gridy = 0;
-        toolsbar.add(muitAdd, toolsbarc);
+//        PstmButton muitAdd = new PstmButton("New", new Dimension(80, 30));
+//        JButton muitAdd = new JButton();
+//        muitAdd.setText("New");
+//        muitAdd.setPreferredSize(new Dimension(80, 30));
+//        muitAdd.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+//        muitAdd.setFocusable(false);
+//        muitAdd.addMouseListener(new MouseAdapter() {
+//
+//            @Override
+//            public void mouseClicked(MouseEvent e) {
+//                PstmRequest req = new PstmRequest();
+//
+//                PstmRequestPanel request = new PstmRequestPanel(req);
+//                
+//                requestsPanel.add(request, "New Request");
+//
+//                requestsPanel.setSelectedIndex(requestsPanel.getTabCount() - 1);
+//            }
+//
+//        });
+//        toolsbarc = new GridBagConstraints();
+//        toolsbarc.gridx = 8;
+//        toolsbarc.gridy = 0;
+//        toolsbar.add(muitAdd, toolsbarc);
         
-        PstmButton muitSave = new PstmButton("Save", new Dimension(80, 30), Style.saveBtColor);
-        muitSave.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        muitSave.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (requestsPanel.getSelectedComponent() != null && requestsPanel.getSelectedComponent() instanceof PstmRequestPanel) {
-                    String str = JSON.toJSONString(((PstmRequestPanel)requestsPanel.getSelectedComponent()).getRequest(), JSONWriter.Feature.PrettyFormat);
-                    System.out.println(str);
-                }
-            }
-            
-        });
-        toolsbarc = new GridBagConstraints();
-        toolsbarc.gridx = 8;
-        toolsbarc.gridy = 0;
-        toolsbar.add(muitSave, toolsbarc);
+//        PstmButton muitSave = new PstmButton("Save", new Dimension(80, 30), Style.saveBtColor);
+//        JButton muitSave = new JButton();
+//        muitSave.setText("Save");
+//        muitSave.setPreferredSize(new Dimension(80, 30));
+//        muitSave.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+//        muitSave.setFocusable(false);
+//        muitSave.setBackground(Style.saveBtColor);
+//        muitSave.addMouseListener(new MouseAdapter() {
+//
+//            @Override
+//            public void mouseClicked(MouseEvent e) {
+//                if (requestsPanel.getSelectedComponent() != null && requestsPanel.getSelectedComponent() instanceof PstmRequestPanel) {
+//                    
+//                    // 如果是从文件加载的，就保存到加载的文件里，如果是新建的，就保存到新的文件里。
+//                    if (((PstmRequestPanel)requestsPanel.getSelectedComponent()).getSaveFile() == null) {
+//                    
+//                        int fileIdx = 1;
+//                        
+//                        for (;;fileIdx++) {
+//                            File f = new File(currPath + "/Request-" + fileIdx + ".json");
+//                            
+//                            if (!f.exists()) {
+//                                break;
+//                            }
+//                        }
+//                        
+//                        JFileChooser chooser = new JFileChooser(currPath);
+//                        
+//                        chooser.setMultiSelectionEnabled(false);
+//                        chooser.setDialogTitle("Save Request");
+//                        chooser.setSelectedFile(new File("Request-" + fileIdx + ".json"));
+//                        
+//                        FileNameExtensionFilter filter = new FileNameExtensionFilter("Json File", "json");
+//                        chooser.setFileFilter(filter);
+//                        
+//                        int rst = chooser.showSaveDialog(frame);
+//                        
+//                        if (rst == JFileChooser.APPROVE_OPTION) {
+//                            
+//                            File fileToSave = chooser.getSelectedFile();
+//                            
+//                            if (!fileToSave.getName().toLowerCase().endsWith(".json")) {
+//                                fileToSave = new File(fileToSave.getAbsolutePath() + ".json");
+//                            }
+//                            
+//                            PrintWriter pw = null;
+//                            
+//                            try {
+//                                String str = JSON.toJSONString(((PstmRequestPanel)requestsPanel.getSelectedComponent()).getRequest(), JSONWriter.Feature.PrettyFormat);
+//                                System.out.println(str);
+//                                
+//                                pw = new PrintWriter(fileToSave);
+//                                pw.write(str);
+//                                pw.flush();
+//                            } catch (FileNotFoundException e1) {
+//                                // TODO Auto-generated catch block
+//                                e1.printStackTrace();
+//                            }finally {
+//                                if (pw != null) {
+//                                    pw.close();
+//                                }
+//                            }
+//                            
+//                            
+//                        }
+//                    } else {
+//                        
+//                        File fileToSave = ((PstmRequestPanel)requestsPanel.getSelectedComponent()).getSaveFile();
+//                        
+//                        if (fileToSave.exists()) {
+//                            fileToSave.delete();
+//                        }
+//                        
+//                        PrintWriter pw = null;
+//                        
+//                        try {
+//                            String str = JSON.toJSONString(((PstmRequestPanel)requestsPanel.getSelectedComponent()).getRequest(), JSONWriter.Feature.PrettyFormat);
+//                            System.out.println(str);
+//                            
+//                            pw = new PrintWriter(fileToSave);
+//                            pw.write(str);
+//                            pw.flush();
+//                        } catch (FileNotFoundException e1) {
+//                            // TODO Auto-generated catch block
+//                            e1.printStackTrace();
+//                        }finally {
+//                            if (pw != null) {
+//                                pw.close();
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            
+//        });
+//        toolsbarc = new GridBagConstraints();
+//        toolsbarc.gridx = 9;
+//        toolsbarc.gridy = 0;
+//        toolsbar.add(muitSave, toolsbarc);
         
         // 关闭tab按钮
-        PstmButton muitClose = new PstmButton("Close", new Dimension(50, 30), Style.closeRequestBtColor);
-        muitClose.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        muitClose.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (requestsPanel.getSelectedComponent() != null) {
-                    requestsPanel.remove(requestsPanel.getSelectedComponent());
-                }
-            }
-        });
-        toolsbarc = new GridBagConstraints();
-        toolsbarc.gridx = 9;
-        toolsbarc.gridy = 0;
-        toolsbar.add(muitClose, toolsbarc);
+//        PstmButton muitClose = new PstmButton("Close", new Dimension(50, 30), Style.closeRequestBtColor);
+//        JButton muitClose = new JButton();
+//        muitClose.setText("Close");
+//        muitClose.setPreferredSize(new Dimension(80, 30));
+//        muitClose.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+//        muitClose.setFocusable(false);
+//        muitClose.setBackground(Style.closeRequestBtColor);
+//        muitClose.addMouseListener(new MouseAdapter() {
+//
+//            @Override
+//            public void mouseClicked(MouseEvent e) {
+//                if (requestsPanel.getSelectedComponent() != null) {
+//                    requestsPanel.remove(requestsPanel.getSelectedComponent());
+//                }
+//            }
+//        });
+//        toolsbarc = new GridBagConstraints();
+//        toolsbarc.gridx = 9;
+//        toolsbarc.gridy = 0;
+//        toolsbar.add(muitClose, toolsbarc);
     }
 
 }

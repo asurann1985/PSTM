@@ -25,7 +25,7 @@ public class PstmAuthBearerTokenSetEditerPanel extends JPanel {
         setLayout(new BorderLayout(0, 0));
 
         JLabel lblNewLabel = new JLabel("Bearer Token Auth");
-        lblNewLabel.setBackground(Style.titleColor);
+        lblNewLabel.setBackground(Style.setItemBackgroundAuth);
         lblNewLabel.setOpaque(true);
         add(lblNewLabel, BorderLayout.NORTH);
 
@@ -46,14 +46,14 @@ public class PstmAuthBearerTokenSetEditerPanel extends JPanel {
                 // TODO Auto-generated method stub
 //                auth.setusernam(tx_key.getText());
                 auth.setBearerToken(tx_bearerToken.getText());
-                setPanel.getLb_info().setText(auth.getBearerToken());
+                setPanel.updateInfo();
             }
 
             @Override
             public void insertUpdate(DocumentEvent e) {
                 // TODO Auto-generated method stub
                 auth.setBearerToken(tx_bearerToken.getText());
-                setPanel.getLb_info().setText(auth.getBearerToken());
+                setPanel.updateInfo();
             }
 
             @Override

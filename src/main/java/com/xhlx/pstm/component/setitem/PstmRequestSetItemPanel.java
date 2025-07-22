@@ -9,11 +9,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.xhlx.pstm.component.PstmRequestSetListPanel;
 import com.xhlx.pstm.component.Style;
 import com.xhlx.pstm.component.editpanel.PstmAuthBasicSetEditerPanel;
@@ -42,22 +45,49 @@ public abstract class PstmRequestSetItemPanel extends JPanel {
 
     public PstmRequestSetItemPanel(PstmRequestSetListPanel parent) {
         this.setListPanel = parent;
-        setBorder(new LineBorder(Style.setItemBorderColor));
         setLayout(new BorderLayout());
-        setPreferredSize(new Dimension(parent.getPreferredSize().width - 4, 30));
+        setPreferredSize(new Dimension(parent.getPreferredSize().width - 4, 50));
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        putClientProperty(FlatClientProperties.STYLE, "border: 1,1,1,1,#1F3B54,0,5");
         this.self = this;
     }
 
     public void initialization() {
-        lb_info = new JLabel("");
+        
+        if ("Auth(Basic)".equals(getTitle())) {
+            setBackground(Style.setItemBackgroundAuth);
+        } else if ("Auth(B-Token)".equals(getTitle())) {
+            setBackground(Style.setItemBackgroundAuth);
+        } else if ("HEADER".equals(getTitle())) {
+            setBackground(Style.setItemBackgroundHeader);
+        } else if ("PARAM".equals(getTitle())) {
+            setBackground(Style.setItemBackgroundParam);
+        } else if (getTitle().startsWith("BODY")) {
+            setBackground(Style.setItemBackgroundBody);
+        }
+        
+        lb_info = new JLabel();
         lb_info.setText(getInfo());
         lb_info.setPreferredSize(new Dimension(15, 15));
         add(lb_info, BorderLayout.CENTER);
+        
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BorderLayout(0, 0));
+        add(titlePanel, BorderLayout.NORTH);
+        
+        JPanel titleLeft = new JPanel();
+        titleLeft.setPreferredSize(new Dimension(2, 15));
+        titlePanel.add(titleLeft, BorderLayout.WEST);
+        
+        JPanel titleRight = new JPanel();
+        titleRight.setPreferredSize(new Dimension(2, 15));
+        titlePanel.add(titleRight, BorderLayout.EAST);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout(0, 0));
-        add(panel, BorderLayout.NORTH);
+//        panel.setPreferredSize(new Dimension(10, 20));
+//        panel.setBackground(Color.blue);
+        titlePanel.add(panel, BorderLayout.CENTER);
 
         JCheckBox active = new JCheckBox();
         active.setBorder(new LineBorder(Color.red, 1));
@@ -71,8 +101,9 @@ public abstract class PstmRequestSetItemPanel extends JPanel {
         });
         panel.add(active, BorderLayout.WEST);
 
-        JLabel lb_title = new JLabel("");
-        lb_title.setBackground(Style.titleColor);
+        JButton lb_title = new JButton("");
+//        lb_title.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_ROUND_RECT);
+//        lb_title.setBackground(Style.titleColor);
         lb_title.setOpaque(true);
         lb_title.setText(getTitle());
         lb_title.setPreferredSize(new Dimension(15, 15));
@@ -80,60 +111,60 @@ public abstract class PstmRequestSetItemPanel extends JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                if ("Auth(Basic)".equals(getTitle())) {
+                if (getData() instanceof PstmBasicAuthItem) {
                     PstmAuthBasicSetEditerPanel panel = new PstmAuthBasicSetEditerPanel((PstmBasicAuthItem) getData(),
                             self);
                     setListPanel.getSetEditPanel().removeAll();
                     setListPanel.getSetEditPanel().add(panel, BorderLayout.CENTER);
-                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 40));
+                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 50));
                     setListPanel.getSetEditPanel().revalidate();
                     setListPanel.getSetEditPanel().repaint();
                     panel.getPw_password().requestFocusInWindow();
-                } else if ("Auth(B-Token)".equals(getTitle())) {
+                } else if (getData() instanceof PstmBearerTokenAuthItem) {
                     PstmAuthBearerTokenSetEditerPanel panel = new PstmAuthBearerTokenSetEditerPanel(
                             (PstmBearerTokenAuthItem) getData(), self);
                     setListPanel.getSetEditPanel().removeAll();
                     setListPanel.getSetEditPanel().add(panel, BorderLayout.CENTER);
-                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 40));
+                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 50));
                     setListPanel.getSetEditPanel().revalidate();
                     setListPanel.getSetEditPanel().repaint();
                     panel.getTx_bearerToken().requestFocusInWindow();
-                } else if ("HEADER".equals(getTitle())) {
+                } else if (getData() instanceof PstmHeaderItem) {
                     PstmHeaderSetEditerPanel panel = new PstmHeaderSetEditerPanel((PstmHeaderItem) getData(), self);
                     setListPanel.getSetEditPanel().removeAll();
                     setListPanel.getSetEditPanel().add(panel, BorderLayout.CENTER);
-                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 40));
+                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 50));
                     setListPanel.getSetEditPanel().revalidate();
                     setListPanel.getSetEditPanel().repaint();
                     panel.getTx_val().requestFocusInWindow();
-                } else if ("PARAM".equals(getTitle())) {
+                } else if (getData() instanceof PstmQueryParamItem) {
                     PstmQueryParamSetEditerPanel panel = new PstmQueryParamSetEditerPanel(
                             (PstmQueryParamItem) getData(), self);
                     setListPanel.getSetEditPanel().removeAll();
                     setListPanel.getSetEditPanel().add(panel, BorderLayout.CENTER);
-                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 40));
+                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 50));
                     setListPanel.getSetEditPanel().revalidate();
                     setListPanel.getSetEditPanel().repaint();
                     panel.getTx_val().requestFocusInWindow();
-                } else if ("BODY(Form)".equals(getTitle())) {
+                } else if (getData() instanceof PstmBodyFormItem) {
                     PstmBodyFormSetEditerPanel panel = new PstmBodyFormSetEditerPanel((PstmBodyFormItem) getData(),
                             self);
                     setListPanel.getSetEditPanel().removeAll();
                     setListPanel.getSetEditPanel().add(panel, BorderLayout.CENTER);
-                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 40));
+                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 50));
                     setListPanel.getSetEditPanel().revalidate();
                     setListPanel.getSetEditPanel().repaint();
                     panel.getTx_val().requestFocusInWindow();
-                } else if ("BODY(File)".equals(getTitle())) {
+                } else if (getData() instanceof PstmBodyFileItem) {
                     PstmBodyFileSetEditerPanel panel = new PstmBodyFileSetEditerPanel((PstmBodyFileItem) getData(),
                             self);
                     setListPanel.getSetEditPanel().removeAll();
                     setListPanel.getSetEditPanel().add(panel, BorderLayout.CENTER);
-                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 40));
+                    setListPanel.getSetEditPanel().setPreferredSize(new Dimension(0, 50));
                     setListPanel.getSetEditPanel().revalidate();
                     setListPanel.getSetEditPanel().repaint();
                     panel.getBt_select().requestFocusInWindow();
-                } else if ("BODY(Json)".equals(getTitle())) {
+                } else if (getData() instanceof PstmBodyJsonItem) {
                     PstmBodyJSONSetEditerPanel panel = new PstmBodyJSONSetEditerPanel((PstmBodyJsonItem) getData(),
                             self);
                     setListPanel.getSetEditPanel().removeAll();
@@ -147,27 +178,47 @@ public abstract class PstmRequestSetItemPanel extends JPanel {
         });
         panel.add(lb_title);
 
-        JLabel lblNewLabel = new JLabel(" X");
-        lblNewLabel.setOpaque(true);
-        lblNewLabel.setBackground(Style.setItemCloseBtColor);
-        lblNewLabel.setPreferredSize(new Dimension(15, 15));
-        lblNewLabel.addMouseListener(new MouseAdapter() {
-
+//        JLabel lblNewLabel = new JLabel(" X");
+//        
+//        lblNewLabel.setOpaque(true);
+//        lblNewLabel.setBackground(Style.setItemCloseBtColor);
+//        lblNewLabel.setPreferredSize(new Dimension(15, 15));
+//        lblNewLabel.addMouseListener(new MouseAdapter() {
+//
+//            @Override
+//            public void mouseClicked(MouseEvent e) {
+//                setListPanel.removeAttr(getData());
+//                setListPanel.remove(self);
+//                setListPanel.setPreferredSize(new Dimension(setListPanel.getPreferredSize().width,
+//                        setListPanel.getPreferredSize().height - setListPanel.getItemHeight()));
+//                setListPanel.revalidate();
+//                setListPanel.repaint();
+//            }
+//        });
+//        panel.add(lblNewLabel, BorderLayout.EAST);
+        JButton btClose = new JButton(new FlatSVGIcon("closebt.svg", 10, 10));
+        btClose.setBackground(Style.setItemCloseBtColor);
+        btClose.addActionListener(new ActionListener() {
+            
             @Override
-            public void mouseClicked(MouseEvent e) {
-                setListPanel.removeAttr(getData());
-                setListPanel.remove(self);
-                setListPanel.setPreferredSize(new Dimension(setListPanel.getPreferredSize().width,
-                        setListPanel.getPreferredSize().height - setListPanel.getItemHeight()));
-                setListPanel.revalidate();
-                setListPanel.repaint();
+            public void actionPerformed(ActionEvent e) {
+              setListPanel.removeAttr(getData());
+              setListPanel.remove(self);
+              setListPanel.setPreferredSize(new Dimension(setListPanel.getPreferredSize().width,
+                      setListPanel.getPreferredSize().height - setListPanel.getItemHeight()));
+              setListPanel.revalidate();
+              setListPanel.repaint();
             }
         });
-        panel.add(lblNewLabel, BorderLayout.EAST);
+        panel.add(btClose, BorderLayout.EAST);
     }
 
-    public JLabel getLb_info() {
-        return lb_info;
+//    public JLabel getLb_info() {
+//        return lb_info;
+//    }
+    
+    public void updateInfo() {
+        lb_info.setText(getInfo());
     }
 
     protected abstract String getTitle();

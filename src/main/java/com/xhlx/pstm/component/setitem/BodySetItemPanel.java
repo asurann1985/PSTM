@@ -1,5 +1,7 @@
 package com.xhlx.pstm.component.setitem;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.xhlx.pstm.component.PstmRequestSetListPanel;
 import com.xhlx.pstm.model.attr.PstmAttr;
 import com.xhlx.pstm.model.attr.PstmBodyFileItem;
@@ -30,13 +32,19 @@ public class BodySetItemPanel extends PstmRequestSetItemPanel {
         } else {
             return "Err";
         }
+//        return "BODY";
     }
 
     @Override
     protected String getInfo() {
         // TODO Auto-generated method stub
         if (body instanceof PstmBodyFormItem) {
-            return ((PstmBodyFormItem) body).getKey();
+            PstmBodyFormItem formBody = (PstmBodyFormItem) body;
+            if (StringUtils.isEmpty(formBody.getKey()) && StringUtils.isEmpty(formBody.getValue())) {
+                return "";
+            } else {
+                return StringUtils.defaultString(formBody.getKey()) + "=" + StringUtils.defaultString(formBody.getValue());
+            }
         } else if (body instanceof PstmBodyFileItem) {
             return ((PstmBodyFileItem) body).getName();
         } else if (body instanceof PstmBodyJsonItem) {

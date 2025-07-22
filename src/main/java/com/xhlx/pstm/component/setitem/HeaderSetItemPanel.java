@@ -2,6 +2,8 @@ package com.xhlx.pstm.component.setitem;
 
 import javax.swing.JPanel;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.xhlx.pstm.component.PstmRequestSetListPanel;
 import com.xhlx.pstm.model.attr.PstmAttr;
 import com.xhlx.pstm.model.attr.PstmHeaderItem;
@@ -26,8 +28,11 @@ public class HeaderSetItemPanel extends PstmRequestSetItemPanel {
 
     @Override
     protected String getInfo() {
-        // TODO Auto-generated method stub
-        return header.getKey();
+        if (StringUtils.isEmpty(header.getKey()) && StringUtils.isEmpty(header.getValue())) {
+            return "";
+        } else {
+            return StringUtils.defaultString(header.getKey()) + "=" + StringUtils.defaultString(header.getValue());
+        }
     }
 
     @Override

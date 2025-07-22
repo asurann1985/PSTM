@@ -7,6 +7,8 @@ public class PstmResponse {
     private byte[] byteBody;
 
     private String stringBody;
+    
+    private String contentType;
 
     public int getStateLine() {
         return stateLine;
@@ -30,6 +32,14 @@ public class PstmResponse {
 
     public void setStringBody(String stringBody) {
         this.stringBody = stringBody;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
 }

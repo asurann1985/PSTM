@@ -1,6 +1,7 @@
 package com.xhlx.pstm.component.editpanel;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Font;
 
 import javax.swing.BoxLayout;
@@ -27,7 +28,7 @@ public class PstmAuthBasicSetEditerPanel extends JPanel {
         setLayout(new BorderLayout(0, 0));
 
         JLabel lblNewLabel = new JLabel("Basic Auth");
-        lblNewLabel.setBackground(Style.titleColor);
+        lblNewLabel.setBackground(Style.setItemBackgroundAuth);
         lblNewLabel.setOpaque(true);
         add(lblNewLabel, BorderLayout.NORTH);
 
@@ -35,11 +36,13 @@ public class PstmAuthBasicSetEditerPanel extends JPanel {
         add(panel, BorderLayout.CENTER);
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-        JLabel lblNewLabel_1 = new JLabel(" user name:  ");
-        panel.add(lblNewLabel_1);
+        JLabel lb_uname = new JLabel(" user name:  ");
+        lb_uname.setPreferredSize(new Dimension(80, 0));
+        panel.add(lb_uname);
 
         tx_userName = new JTextField();
         tx_userName.setFont(PstmFont.getPstmFont(12f, Font.PLAIN));
+        tx_userName.setPreferredSize(new Dimension(300, 0));
         tx_userName.setText(auth.getUserName());
         tx_userName.getDocument().addDocumentListener(new DocumentListener() {
 
@@ -48,14 +51,14 @@ public class PstmAuthBasicSetEditerPanel extends JPanel {
                 // TODO Auto-generated method stub
 //                auth.setusernam(tx_key.getText());
                 auth.setUserName(tx_userName.getText());
-                setPanel.getLb_info().setText(auth.getUserName());
+                setPanel.updateInfo();
             }
 
             @Override
             public void insertUpdate(DocumentEvent e) {
                 // TODO Auto-generated method stub
                 auth.setUserName(tx_userName.getText());
-                setPanel.getLb_info().setText(auth.getUserName());
+                setPanel.updateInfo();
             }
 
             @Override
@@ -65,11 +68,13 @@ public class PstmAuthBasicSetEditerPanel extends JPanel {
         });
         panel.add(tx_userName);
 
-        JLabel lblNewLabel_2 = new JLabel("  password:  ");
-        panel.add(lblNewLabel_2);
+        JLabel lb_upwd = new JLabel("  password:  ");
+        lb_upwd.setPreferredSize(new Dimension(80, 0));
+        panel.add(lb_upwd);
 
         pw_password = new JPasswordField();
         pw_password.setFont(PstmFont.getPstmFont(12f, Font.PLAIN));
+        pw_password.setPreferredSize(new Dimension(300, 0));
         pw_password.setText(auth.getPassword());
         pw_password.getDocument().addDocumentListener(new DocumentListener() {
 
@@ -77,12 +82,14 @@ public class PstmAuthBasicSetEditerPanel extends JPanel {
             public void removeUpdate(DocumentEvent e) {
                 // TODO Auto-generated method stub
                 auth.setPassword(new String(pw_password.getPassword()));
+                setPanel.updateInfo();
             }
 
             @Override
             public void insertUpdate(DocumentEvent e) {
                 // TODO Auto-generated method stub
                 auth.setPassword(new String(pw_password.getPassword()));
+                setPanel.updateInfo();
             }
 
             @Override

@@ -21,6 +21,7 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.message.StatusLine;
 import org.apache.hc.core5.io.CloseMode;
 
+import com.formdev.flatlaf.util.StringUtils;
 import com.xhlx.pstm.model.BodyType;
 import com.xhlx.pstm.model.PstmMethod;
 import com.xhlx.pstm.model.PstmRequest;
@@ -46,6 +47,10 @@ public class PstmSender {
     public static PstmResponse send(PstmRequest pstmReq) {
 
 //        final IOReactorConfig ioReactorConfig = IOReactorConfig.custom().setSoTimeout(Timeout.ofSeconds(300)).build();
+        
+        if (StringUtils.isEmpty(pstmReq.getUrl())) {
+            return null;
+        }
 
         final CloseableHttpAsyncClient client = HttpAsyncClients.createDefault();
 
@@ -173,6 +178,7 @@ public class PstmSender {
         pstmResp.setStateLine(response.getCode());
         pstmResp.setStringBody(response.getBodyText());
         pstmResp.setByteBody(response.getBodyBytes());
+        pstmResp.setContentType(response.getContentType().toString());
 
         System.out.println("Shutting down");
         client.close(CloseMode.GRACEFUL);
