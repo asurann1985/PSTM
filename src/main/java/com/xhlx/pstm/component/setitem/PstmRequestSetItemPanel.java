@@ -42,6 +42,8 @@ public abstract class PstmRequestSetItemPanel extends JPanel {
     private PstmRequestSetItemPanel self;
 
     private JLabel lb_info;
+    
+    private JCheckBox active;
 
     public PstmRequestSetItemPanel(PstmRequestSetListPanel parent) {
         this.setListPanel = parent;
@@ -89,7 +91,7 @@ public abstract class PstmRequestSetItemPanel extends JPanel {
 //        panel.setBackground(Color.blue);
         titlePanel.add(panel, BorderLayout.CENTER);
 
-        JCheckBox active = new JCheckBox();
+        active = new JCheckBox();
         active.setBorder(new LineBorder(Color.red, 1));
         active.setSelected(getData().isActive());
         active.addActionListener(new ActionListener() {
@@ -110,7 +112,7 @@ public abstract class PstmRequestSetItemPanel extends JPanel {
         lb_title.addMouseListener(new MouseAdapter() {
 
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {
                 if (getData() instanceof PstmBasicAuthItem) {
                     PstmAuthBasicSetEditerPanel panel = new PstmAuthBasicSetEditerPanel((PstmBasicAuthItem) getData(),
                             self);
@@ -220,10 +222,14 @@ public abstract class PstmRequestSetItemPanel extends JPanel {
     public void updateInfo() {
         lb_info.setText(getInfo());
     }
+    
+    public void setActive(boolean active) {
+        this.active.setSelected(active);
+    }
 
     protected abstract String getTitle();
 
     protected abstract String getInfo();
 
-    protected abstract PstmAttr getData();
+    public abstract PstmAttr getData();
 }

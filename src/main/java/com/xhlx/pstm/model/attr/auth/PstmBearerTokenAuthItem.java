@@ -8,8 +8,8 @@ public class PstmBearerTokenAuthItem extends PstmAuth implements Auth {
 
     @Override
     public void auth(SimpleRequestBuilder builder) {
-        // TODO Auto-generated method stub
-
+        
+        builder.setHeader("Authorization", "Bearer " + bearerToken);
     }
 
     @Override

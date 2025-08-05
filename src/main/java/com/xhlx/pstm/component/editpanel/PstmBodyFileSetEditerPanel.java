@@ -92,7 +92,7 @@ public class PstmBodyFileSetEditerPanel extends JPanel {
         bt_select.addMouseListener(new MouseAdapter() {
 
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {
                 JFileChooser fileSel = new JFileChooser();
                 fileSel.setMultiSelectionEnabled(false);
 

@@ -1,5 +1,10 @@
 package com.xhlx.pstm.model.attr.auth;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.util.Base64;
+
+import org.apache.commons.lang3.CharSet;
 import org.apache.hc.client5.http.async.methods.SimpleRequestBuilder;
 
 public class PstmBasicAuthItem extends PstmAuth implements Auth {
@@ -10,8 +15,16 @@ public class PstmBasicAuthItem extends PstmAuth implements Auth {
 
     @Override
     public void auth(SimpleRequestBuilder builder) {
-        // TODO Auto-generated method stub
-
+        try {
+            String authStr = userName + ":" + password;
+            String authStr64 = Base64.getEncoder().encodeToString(authStr.getBytes("UTF-8"));
+            
+            builder.setHeader("Authorization", authStr64);
+            
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        
     }
 
     @Override

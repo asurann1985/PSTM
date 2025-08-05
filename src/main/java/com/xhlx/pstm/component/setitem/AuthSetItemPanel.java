@@ -29,7 +29,7 @@ public class AuthSetItemPanel extends PstmRequestSetItemPanel {
     }
 
     @Override
-    protected PstmAttr getData() {
+    public PstmAttr getData() {
         // TODO Auto-generated method stub
         return auth;
     }

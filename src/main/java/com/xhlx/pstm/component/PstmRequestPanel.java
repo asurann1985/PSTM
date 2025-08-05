@@ -21,6 +21,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import com.xhlx.pstm.PstmSender;
+import com.xhlx.pstm.model.BodyType;
 import com.xhlx.pstm.model.PstmMethod;
 import com.xhlx.pstm.model.PstmRequest;
 import com.xhlx.pstm.model.PstmResponse;
@@ -54,34 +55,76 @@ public class PstmRequestPanel extends JPanel {
         topPanel.setLayout(new BorderLayout(0, 0));
         topPanel.setBorder(new LineBorder(Style.windowBackgroundColor, 8));
 
-        JComboBox<PstmMethod> comboBox = new JComboBox<>();
-        comboBox.setPreferredSize(new Dimension(100, 35));
+        JPanel methodPanel = new JPanel();
+        methodPanel.setLayout(new BorderLayout());
+        
+        JComboBox<PstmMethod> method = new JComboBox<>();
+        JComboBox<BodyType> bodyType = new JComboBox<>();
+        method.setPreferredSize(new Dimension(100, 35));
 //        comboBox.setAlignmentY(0.5f);
-        comboBox.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        method.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 //        comboBox.setFont(PstmFont.getPstmFont(16f, Font.PLAIN));
 //        comboBox.setFocusable(false);
 //        comboBox.setEditable(true);
-        comboBox.setModel(new DefaultComboBoxModel<PstmMethod>(new PstmMethod[] {
+        method.setModel(new DefaultComboBoxModel<PstmMethod>(new PstmMethod[] {
                 PstmMethod.GET,
                 PstmMethod.POST,
                 PstmMethod.DELETE
         }));
 
         if (request.getMethod() != null) {
-            comboBox.setSelectedItem(request.getMethod());
+            method.setSelectedItem(request.getMethod());
         }
 
-        comboBox.addItemListener(new ItemListener() {
+        method.addItemListener(new ItemListener() {
 
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
-                    request.setMethod((PstmMethod) comboBox.getSelectedItem());
+                    request.setMethod((PstmMethod) method.getSelectedItem());
+                    if (request.getMethod() == PstmMethod.POST) {
+                        bodyType.setVisible(true);
+                    } else {
+                        bodyType.setVisible(false);
+                    }
                 }
             }
         });
+        
+        methodPanel.add(method, BorderLayout.WEST);
+        
+        
+        bodyType.setPreferredSize(new Dimension(120, 35));
+        bodyType.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        bodyType.setModel(new DefaultComboBoxModel<BodyType>(new BodyType[] {
+                BodyType.FORMDATA,
+                BodyType.RAW,
+                BodyType.BINDRY
+        }));
+        
+        if (request.getBodyType() != null) {
+            bodyType.setSelectedItem(request.getBodyType());
+        }
+        
+        bodyType.addItemListener(new ItemListener() {
 
-        topPanel.add(comboBox, BorderLayout.WEST);
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    request.setBodyType((BodyType) bodyType.getSelectedItem());
+                }
+            }
+        });
+        
+        if (request.getMethod() == PstmMethod.POST) {
+            bodyType.setVisible(true);
+        } else {
+            bodyType.setVisible(false);
+        }
+        
+        methodPanel.add(bodyType, BorderLayout.CENTER);
+
+        topPanel.add(methodPanel, BorderLayout.WEST);
 
         tx_url = new JTextField();
 //        tx_url.setFont(PstmFont.getPstmFont(15f, Font.PLAIN));
@@ -124,7 +167,7 @@ public class PstmRequestPanel extends JPanel {
         btSend.addMouseListener(new MouseAdapter() {
 
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {
                 PstmResponse resp = PstmSender.send(request);
                 if (resp != null) {
                     respPanel.showResp(resp);

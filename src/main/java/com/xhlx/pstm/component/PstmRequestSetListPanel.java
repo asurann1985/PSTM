@@ -1,5 +1,6 @@
 package com.xhlx.pstm.component;
 
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -14,12 +15,15 @@ import java.util.List;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
+import com.xhlx.MainWind;
 import com.xhlx.pstm.component.setitem.AuthSetItemPanel;
 import com.xhlx.pstm.component.setitem.BodySetItemPanel;
 import com.xhlx.pstm.component.setitem.HeaderSetItemPanel;
+import com.xhlx.pstm.component.setitem.PstmRequestSetItemPanel;
 import com.xhlx.pstm.component.setitem.QueryParamSetItemPanel;
 import com.xhlx.pstm.model.PstmRequest;
 import com.xhlx.pstm.model.attr.PstmAttr;
@@ -62,8 +66,10 @@ public class PstmRequestSetListPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if ("Basic".equals(e.getActionCommand())) {
-                    PstmAuth auth = new PstmBasicAuthItem();
+                    PstmBasicAuthItem auth = new PstmBasicAuthItem();
                     auth.setActive(true);
+                    auth.setUserName("");
+                    auth.setPassword("");
                     request.getAuths().add(auth);
                     AuthSetItemPanel panel = new AuthSetItemPanel(self, auth);
                     add(panel);
@@ -72,8 +78,9 @@ public class PstmRequestSetListPanel extends JPanel {
                     self.revalidate();
                     self.repaint();
                 } else if ("Bearer Token".equals(e.getActionCommand())) {
-                    PstmAuth auth = new PstmBearerTokenAuthItem();
+                    PstmBearerTokenAuthItem auth = new PstmBearerTokenAuthItem();
                     auth.setActive(true);
+                    auth.setBearerToken("");
                     request.getAuths().add(auth);
                     AuthSetItemPanel panel = new AuthSetItemPanel(self, auth);
                     add(panel);
@@ -84,6 +91,8 @@ public class PstmRequestSetListPanel extends JPanel {
                 } else if ("Header".equals(e.getActionCommand())) {
                     PstmHeaderItem header = new PstmHeaderItem();
                     header.setActive(true);
+                    header.setKey("");
+                    header.setValue("");
                     request.getHeaders().add(header);
                     HeaderSetItemPanel panel = new HeaderSetItemPanel(self, header);
                     add(panel);
@@ -94,6 +103,8 @@ public class PstmRequestSetListPanel extends JPanel {
                 } else if ("Param".equals(e.getActionCommand())) {
                     PstmQueryParamItem param = new PstmQueryParamItem();
                     param.setActive(true);
+                    param.setKey("");
+                    param.setValue("");
                     request.getParams().add(param);
                     QueryParamSetItemPanel panel = new QueryParamSetItemPanel(self, param);
                     add(panel);
@@ -104,6 +115,8 @@ public class PstmRequestSetListPanel extends JPanel {
                 } else if ("Form".equals(e.getActionCommand())) {
                     PstmBodyFormItem body = new PstmBodyFormItem();
                     body.setActive(true);
+                    body.setKey("");
+                    body.setValue("");
                     request.getBodys().add(body);
                     BodySetItemPanel panel = new BodySetItemPanel(self, body);
                     add(panel);
@@ -114,6 +127,8 @@ public class PstmRequestSetListPanel extends JPanel {
                 } else if ("File".equals(e.getActionCommand())) {
                     PstmBodyFileItem body = new PstmBodyFileItem();
                     body.setActive(true);
+                    body.setName("");
+                    body.setPath("");
                     request.getBodys().add(body);
                     BodySetItemPanel panel = new BodySetItemPanel(self, body);
                     add(panel);
@@ -122,8 +137,58 @@ public class PstmRequestSetListPanel extends JPanel {
                     self.revalidate();
                     self.repaint();
                 } else if ("Json".equals(e.getActionCommand())) {
+                    boolean active = true;
+                    if (request.getBodys().stream().anyMatch(x -> x.isActive() && (x.getClass() == PstmBodyFormItem.class || x.getClass() == PstmBodyFileItem.class))) {
+                        int rst = JOptionPane.showOptionDialog(MainWind.window.frame, 
+                                "Json和Form/File无法共存，是否要使用Json？\n\n确定：修改已添加的Form和File变为非Active\n取消：不修改已添加的Form和File，但设置此Json为非Active", 
+                                "Title", 
+                                JOptionPane.OK_CANCEL_OPTION, 
+                                JOptionPane.WARNING_MESSAGE,
+                                null,
+                                null,
+                                null);
+                        
+                        if (rst == JOptionPane.OK_OPTION) {
+                            for (Component comp : getComponents()) {
+                                if (comp instanceof PstmRequestSetItemPanel) {
+                                    PstmRequestSetItemPanel pstmComp = (PstmRequestSetItemPanel) comp;
+                                    if (pstmComp.getData().isActive() && (pstmComp.getData().getClass() == PstmBodyFormItem.class || pstmComp.getData().getClass() == PstmBodyFileItem.class)) {
+                                        pstmComp.setActive(false);
+                                        pstmComp.getData().setActive(false);
+                                    }
+                                }
+                            }
+                        } else if (rst == JOptionPane.CANCEL_OPTION) {
+                            active = false;
+                        }
+                    } else if (request.getBodys().stream().anyMatch(x -> x.isActive() && x.getClass() == PstmBodyJsonItem.class)) {
+                        int rst = JOptionPane.showOptionDialog(MainWind.window.frame, 
+                                "已经存在Active的Json，是否要使用新的Json？\n\n确定：修改已添加的Json为非Active\n取消：不修改已添加的Json，但设置此Json为非Active", 
+                                "Title", 
+                                JOptionPane.OK_CANCEL_OPTION, 
+                                JOptionPane.WARNING_MESSAGE,
+                                null,
+                                null,
+                                null);
+                        
+                        if (rst == JOptionPane.OK_OPTION) {
+                            for (Component comp : getComponents()) {
+                                if (comp instanceof PstmRequestSetItemPanel) {
+                                    PstmRequestSetItemPanel pstmComp = (PstmRequestSetItemPanel) comp;
+                                    if (pstmComp.getData().isActive() && pstmComp.getData().getClass() == PstmBodyJsonItem.class) {
+                                        pstmComp.setActive(false);
+                                        pstmComp.getData().setActive(false);
+                                    }
+                                }
+                            }
+                        } else if (rst == JOptionPane.CANCEL_OPTION) {
+                            active = false;
+                        }
+                    }
+                    
                     PstmBodyJsonItem body = new PstmBodyJsonItem();
-                    body.setActive(true);
+                    body.setActive(active);
+                    body.setJson("");
                     request.getBodys().add(body);
                     BodySetItemPanel panel = new BodySetItemPanel(self, body);
                     add(panel);

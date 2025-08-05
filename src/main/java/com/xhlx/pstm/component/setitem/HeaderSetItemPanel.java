@@ -36,7 +36,7 @@ public class HeaderSetItemPanel extends PstmRequestSetItemPanel {
     }
 
     @Override
-    protected PstmAttr getData() {
+    public PstmAttr getData() {
         // TODO Auto-generated method stub
         return header;
     }

@@ -9,9 +9,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.alibaba.fastjson2.JSON;
@@ -35,10 +40,14 @@ import static com.formdev.flatlaf.FlatClientProperties.TABBED_PANE_TAB_CLOSE_CAL
 import static com.formdev.flatlaf.FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT;
 
 public class MainWind {
+    
+    public static MainWind window;
 
-    private JFrame frame;
+    public JFrame frame;
     
     public String currPath = "";
+    
+    public static Map<String, String> properties = new HashMap<>();
 
     /**
      * Launch the application.
@@ -52,7 +61,7 @@ public class MainWind {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try { 
-                    MainWind window = new MainWind();
+                    window = new MainWind();
                     window.frame.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -105,18 +114,18 @@ public class MainWind {
 
         JMenuItem openMenuItem = new JMenuItem();
 
-        openMenuItem.setText("Open");
+        openMenuItem.setText("Import");
         openMenuItem.setAccelerator(
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-        openMenuItem.setMnemonic('N');
+        openMenuItem.setMnemonic('I');
         fileMenu.add(openMenuItem);
 
         JMenuItem importMenuItem = new JMenuItem();
 
-        importMenuItem.setText("Import");
+        importMenuItem.setText("Save");
         importMenuItem.setAccelerator(
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-        importMenuItem.setMnemonic('N');
+        importMenuItem.setMnemonic('S');
         fileMenu.add(importMenuItem);
         
         menuBar.add(fileMenu);
@@ -134,7 +143,7 @@ public class MainWind {
         muitAdd.addMouseListener(new MouseAdapter() {
 
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {
                 PstmRequest req = new PstmRequest();
 
                 PstmRequestPanel request = new PstmRequestPanel(req, requestsPanel);
@@ -143,6 +152,48 @@ public class MainWind {
 
                 requestsPanel.setSelectedIndex(requestsPanel.getTabCount() - 1);
             }
+        });
+        
+        JButton muitImport = new JButton(new FlatSVGIcon("import.svg", 25, 25));
+        muitImport.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        muitImport.setFocusable(false);
+        muitImport.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                JFileChooser chooser = new JFileChooser(properties.get("lib.rootpath"));
+                chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                chooser.setDialogTitle("Import Request");
+                chooser.setFileFilter(new FileNameExtensionFilter("Json File", "json"));
+                
+                
+                int rst = chooser.showOpenDialog(frame);
+                
+                if (rst == JFileChooser.APPROVE_OPTION) {
+                    File file = chooser.getSelectedFile();
+                    
+                    if (file.exists()) {
+                        PstmRequest request = null;
+                        try {
+                            request = JSON.parseObject(new FileInputStream(file), PstmRequest.class);
+                        } catch (FileNotFoundException e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }
+                        
+                        if (request != null) {
+                            PstmRequestPanel newPanel = new PstmRequestPanel(request, requestsPanel);
+                            
+                            newPanel.setSaveFile(file);
+                            
+                            requestsPanel.add(newPanel, request.getUrl());
+                            
+                            requestsPanel.setSelectedIndex(requestsPanel.getTabCount() - 1);
+                        }
+                    }
+                }
+            }
+            
         });
         
         JButton muitSave = new JButton(new FlatSVGIcon("downloadtab.svg", 25, 25));
@@ -154,7 +205,7 @@ public class MainWind {
         muitSave.addMouseListener(new MouseAdapter() {
 
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {
                 if (requestsPanel.getSelectedComponent() != null && requestsPanel.getSelectedComponent() instanceof PstmRequestPanel) {
                     
                     // 如果是从文件加载的，就保存到加载的文件里，如果是新建的，就保存到新的文件里。
@@ -244,7 +295,8 @@ public class MainWind {
         trailing.setFloatable( false );
         trailing.setBorder( null );
         trailing.add( Box.createHorizontalGlue() );
-        trailing.add( muitAdd );
+        trailing.add(muitAdd);
+        trailing.add(muitImport);
         trailing.add(muitSave);
 
         
@@ -258,6 +310,7 @@ public class MainWind {
         requestsPanel.putClientProperty( TABBED_PANE_TAB_ALIGNMENT, SwingConstants.LEADING );
         requestsPanel.putClientProperty( TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING );
         requestsPanel.putClientProperty( TABBED_PANE_TRAILING_COMPONENT, trailing );
+        requestsPanel.putClientProperty( TABBED_PANE_SHOW_TAB_SEPARATORS, true);
         requestsPanel.putClientProperty( TABBED_PANE_TAB_CLOSE_CALLBACK,
                 (BiConsumer<JTabbedPane, Integer>) (tabPane, tabIndex) -> {
 //                    AWTEvent e = EventQueue.getCurrentEvent();
@@ -267,6 +320,20 @@ public class MainWind {
 //                            "Tab Closed", JOptionPane.PLAIN_MESSAGE );
                     requestsPanel.remove(tabIndex);
                 } );
+        
+        // 切换tab的时候根据tab是否已经保存修改保存按钮图标
+        requestsPanel.addChangeListener(new ChangeListener() {
+            
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                PstmRequestPanel reqPanel = (PstmRequestPanel) requestsPanel.getSelectedComponent();
+                if (reqPanel.getSaveFile() != null) {
+                    muitSave.setIcon(new FlatSVGIcon("replace.svg", 25, 25));
+                } else {
+                    muitSave.setIcon(new FlatSVGIcon("downloadtab.svg", 25, 25));
+                }
+            }
+        });
 
 
 //        PstmRequest req = new PstmRequest();

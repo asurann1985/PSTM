@@ -28,7 +28,7 @@ public class QueryParamSetItemPanel extends PstmRequestSetItemPanel {
     }
 
     @Override
-    protected PstmAttr getData() {
+    public PstmAttr getData() {
         // TODO Auto-generated method stub
         return param;
     }
